@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>SysOperation: Controller + Service (DYNAMO)</Name>
+    <Description>Crea las clases &lt;Nombre&gt;Controller y &lt;Nombre&gt;Service del SysOperation framework, ya enlazadas. Sin contract: process() no lleva parametros.</Description>
+    <Icon>DynamoSysOperation.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoProcess</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="SysOperation" />
+      <CustomParameter Name="$DynamoIncludeContract$" Value="false" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <!-- Ver la nota sobre el nombre del assembly en DynamoFormWithMenuItem.vstemplate. -->
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

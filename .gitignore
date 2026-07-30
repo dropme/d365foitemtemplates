@@ -1,0 +1,25 @@
+# Build
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Assemblies de las herramientas de D365.
+#
+# NO se versionan: son binarios propietarios de Microsoft y este repo es publico.
+# Se obtienen de la instalacion local con tools\Get-D365Assemblies.ps1.
+lib/*.dll
+
+# Codigo decompilado de las herramientas de Microsoft.
+#
+# Es material de referencia utilisimo para entender la API no documentada, pero es codigo de
+# Microsoft: se mantiene local, no se publica.
+decompiled/
+
+# Material de referencia interno: los X++ de ejemplo en los que se basaron las recetas,
+# notas de trabajo, etc. Util para desarrollar, no forma parte de lo que se distribuye.
+docs/
+
+# Contexto de trabajo interno. El README publico cubre lo que necesita alguien de afuera.
+CLAUDE.md

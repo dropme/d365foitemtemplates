@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>SysOperation: Controller + Service + Menu Item (DYNAMO)</Name>
+    <Description>Crea las clases &lt;Nombre&gt;Controller y &lt;Nombre&gt;Service del SysOperation framework, mas un Display Menu Item que llama al controller.</Description>
+    <Icon>DynamoSysOperationWithMenuItem.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoProcess</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <!-- Misma receta que DynamoSysOperation; cambian solo los flags. -->
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="SysOperation" />
+      <CustomParameter Name="$DynamoIncludeContract$" Value="false" />
+      <CustomParameter Name="$DynamoIncludeMenuItem$" Value="true" />
+      <CustomParameter Name="$DynamoIncludePrivileges$" Value="false" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

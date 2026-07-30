@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Form + Display Menu Item (DYNAMO)</Name>
+    <Description>Crea un Form y un Display Menu Item ya apuntando al Form.</Description>
+    <Icon>DynamoFormWithMenuItem.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoForm</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <!--
+    TemplateContent vacio de contenido, igual que los templates de Microsoft:
+    no se copia ningun archivo, el wizard crea todo via la API de metadatos.
+    CustomParameters es lo unico que agregamos, para que el wizard sepa que receta correr.
+  -->
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="FormWithMenuItem" />
+      <!-- Valores por defecto de la receta. Tabla base vacia = form sin data source. -->
+      <CustomParameter Name="$DynamoBaseTable$" Value="" />
+      <CustomParameter Name="$DynamoFormPattern$" Value="SimpleListDetails" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <!--
+    El assembly se distribuye dentro del VSIX, no en la GAC, asi que no esta firmado y basta
+    con el nombre simple. Si algun dia se firma, hay que poner aca el nombre completo con su
+    PublicKeyToken real.
+  -->
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Form + Display Menu Item + Privilegios (DYNAMO)</Name>
+    <Description>Crea un Form, un Display Menu Item apuntando al Form, y los privilegios de seguridad con el menu item referenciado. No crea tablas.</Description>
+    <Icon>DynamoFormWithPrivileges.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoForm</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="FormWithPrivileges" />
+      <!-- Tabla base vacia = form sin data source. -->
+      <CustomParameter Name="$DynamoBaseTable$" Value="" />
+      <CustomParameter Name="$DynamoFormPattern$" Value="SimpleListDetails" />
+      <CustomParameter Name="$DynamoPrivilegeLevels$" Value="View,Maintain" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <!-- Ver la nota sobre el nombre del assembly en DynamoFormWithMenuItem.vstemplate. -->
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

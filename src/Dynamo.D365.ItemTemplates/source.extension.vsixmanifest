@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="Dynamo.D365.ItemTemplates.9f3c1a4e-8b21-4d7a-9c55-2f0e6d1b7a83"
+              Version="1.0.2"
+              Language="en-US"
+              Publisher="DYNAMO" />
+    <DisplayName>DYNAMO - Item templates compuestos para D365 F&amp;O</DisplayName>
+    <Description xml:space="preserve">Entradas en Add &gt; New Item que crean varios elementos del AOT ya conectados entre si: form + display menu item, y tabla + form + menu item + privilegios.</Description>
+  </Metadata>
+
+  <Installation>
+    <!--
+      Solo VS2022: el assembly referencia las herramientas de D365 en su version .17.0.
+      Para VS2019 habria que recompilar contra los assemblies .16.0.
+    -->
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+  </Installation>
+
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+  </Dependencies>
+
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
+
+  <Assets>
+    <!-- El assembly del wizard. -->
+    <Asset Type="Microsoft.VisualStudio.Assembly"
+           d:Source="Project"
+           d:ProjectName="Dynamo.D365.ItemTemplates"
+           Path="|Dynamo.D365.ItemTemplates;AssemblyName|"
+           AssemblyName="|Dynamo.D365.ItemTemplates;AssemblyName|" />
+
+    <!--
+      Sin este .pkgdef, el asset de arriba no alcanza: VS instala el assembly pero no sabe
+      donde buscarlo cuando el .vstemplate nombra el wizard. El pkgdef registra la carpeta de
+      la extension como binding path.
+    -->
+    <Asset Type="Microsoft.VisualStudio.VsPackage"
+           d:Source="File"
+           Path="Dynamo.D365.ItemTemplates.pkgdef" />
+
+    <!--
+      Raiz del arbol de item templates. La estructura de carpetas de abajo es la que decide
+      donde aparece cada template:
+
+        ItemTemplates\FinanceOperations\<Categoria>\<Template>\<Template>.vstemplate
+
+      FinanceOperations tiene que coincidir con el <ProjectType> del .vstemplate, y las
+      categorias (User Interface, Data Model, Code, ...) replican las de Microsoft.
+    -->
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate"
+           d:Source="File"
+           Path="ItemTemplates"
+           d:VsixSubPath="ItemTemplates" />
+  </Assets>
+</PackageManifest>

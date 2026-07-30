@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Table + Form + Menu Item + Privilegios (DYNAMO)</Name>
+    <Description>Crea una tabla, un form con la tabla como data source, un display menu item apuntando al form, y los privilegios de seguridad con el menu item referenciado.</Description>
+    <Icon>DynamoTableSuite.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoTable</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="TableSuite" />
+      <!-- Valores por defecto de la receta; el form del wizard los puede sobrescribir. -->
+      <CustomParameter Name="$DynamoFormPattern$" Value="SimpleList" />
+      <CustomParameter Name="$DynamoPrivilegeLevels$" Value="View,Maintain" />
+      <CustomParameter Name="$DynamoKeyField$" Value="Code" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <!-- Ver la nota sobre el nombre del assembly en DynamoFormWithMenuItem.vstemplate. -->
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

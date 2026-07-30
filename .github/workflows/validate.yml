@@ -1,0 +1,25 @@
+name: Validate
+
+# Valida los .vstemplate en cada push y PR.
+#
+# No compila: el proyecto referencia assemblies de las herramientas de D365, que son de
+# Microsoft y no se versionan en el repo. Compilar y publicar se hace desde una VM de
+# desarrollo con tools\New-Release.ps1 (o con el workflow release.yml, si hay un runner
+# self-hosted).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  templates:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar los item templates
+        shell: pwsh
+        run: .\tools\Test-Templates.ps1

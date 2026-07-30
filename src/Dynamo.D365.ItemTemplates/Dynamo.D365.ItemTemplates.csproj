@@ -1,0 +1,137 @@
+<!--
+  Imports del SDK explicitos (en vez de Sdk="Microsoft.NET.Sdk" en el elemento Project) para
+  poder importar Microsoft.VsSDK.targets DESPUES de Sdk.targets. Con el import implicito, el
+  SDK se importa al final del archivo y VsSDK evaluaria sus propiedades (IntermediateOutputPath
+  y compania) antes de que existan.
+-->
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <!-- Los assemblies de las herramientas de D365 estan compilados contra .NET Framework 4.8. -->
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>Dynamo.D365.ItemTemplates</AssemblyName>
+    <RootNamespace>Dynamo.D365.ItemTemplates</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>1.0.0.0</Version>
+  </PropertyGroup>
+
+  <!--
+    Los assemblies de D365 vienen de la carpeta de extension de Visual Studio, cuyo nombre es
+    random por maquina. Para poder compilar fuera de una VM de desarrollo se copiaron a lib\.
+
+    Para compilar contra una instalacion real:
+      msbuild /p:D365ToolsPath="C:\...\Extensions\<random>"
+  -->
+  <PropertyGroup>
+    <D365ToolsPath Condition="'$(D365ToolsPath)' == ''">$(MSBuildThisFileDirectory)..\..\lib</D365ToolsPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Copy Local = No a proposito: estos assemblies ya estan cargados en el proceso de Visual
+      Studio. Redistribuirlos en el VSIX rompe la identidad de tipos y ademas los deja
+      desactualizados frente a la instalacion real.
+    -->
+    <Reference Include="Microsoft.Dynamics.AX.Metadata">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.AX.Metadata.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.Dynamics.AX.Metadata.Core">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.AX.Metadata.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.Dynamics.Framework.Tools.MetaModel.Core.17.0">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.MetaModel.Core.17.0.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.Dynamics.Framework.Tools.Extensibility.17.0">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.Extensibility.17.0.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!--
+      Necesario para VSProjectNode.AddModelElementsToProject, que es lo unico que respeta la
+      opcion "Organize elements in project" y reparte los elementos en las carpetas por tipo.
+      La clase y el metodo son publicos, pero el assembly es parte de las herramientas: si en
+      alguna PU deja de resolver, el plan B es IDynamicsProject (MetaModel.Core, tambien
+      publico) + crear las carpetas a mano.
+    -->
+    <Reference Include="Microsoft.Dynamics.Framework.Tools.ProjectSystem.17.0">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.ProjectSystem.17.0.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- VSProjectNode hereda de ProjectNode, que vive aca. -->
+    <Reference Include="Microsoft.Dynamics.Framework.Tools.ProjectSupport.17.0">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.ProjectSupport.17.0.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EnvDTE" Version="17.0.32112.339" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.TemplateWizardInterface" Version="17.0.32112.339" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.9.3184" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Empaquetado del VSIX. -->
+  <PropertyGroup>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <CreateVsixContainer>true</CreateVsixContainer>
+    <DeployExtension>false</DeployExtension>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </None>
+
+    <!--
+      El .pkgdef registra la carpeta de la extension como binding path, para que VS pueda
+      resolver el assembly del wizard que nombran los .vstemplate.
+
+      Se escribe a mano en vez de dejar que lo genere el VSSDK (GeneratePkgDefFile): esa
+      generacion parte de atributos de registro sobre un VSPackage, y esta extension no tiene
+      ninguno; es solo templates y un IWizard.
+    -->
+    <Content Include="Dynamo.D365.ItemTemplates.pkgdef">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    Los .vstemplate van sueltos (no zipeados), replicando como los distribuye Microsoft, y
+    conservando la estructura de carpetas: es la carpeta la que decide bajo que nodo del arbol
+    de Add > New Item aparece cada template.
+  -->
+  <!-- Content, no None: VsSDK.targets solo levanta IncludeInVSIX de los items Content. -->
+  <ItemGroup>
+    <Content Include="..\..\ItemTemplates\**\*.*">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ItemTemplates\%(RecursiveDir)</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>ItemTemplates\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!--
+    Microsoft.VSSDK.BuildTools no engancha sus targets solo en proyectos SDK-style: su
+    .targets de NuGet unicamente define variables de entorno. El empaquetado real
+    (CreateVsixContainer) vive en Microsoft.VsSDK.targets, dentro del propio paquete, y hay
+    que importarlo a mano, despues de Sdk.targets.
+  -->
+  <PropertyGroup>
+    <VsSDKBuildToolsVersion>17.9.3184</VsSDKBuildToolsVersion>
+    <VsSDKTargetsPath>$(NuGetPackageRoot)microsoft.vssdk.buildtools\$(VsSDKBuildToolsVersion)\tools\VSSDK\Microsoft.VsSDK.targets</VsSDKTargetsPath>
+  </PropertyGroup>
+
+  <Import Project="$(VsSDKTargetsPath)" Condition="Exists('$(VsSDKTargetsPath)')" />
+
+</Project>

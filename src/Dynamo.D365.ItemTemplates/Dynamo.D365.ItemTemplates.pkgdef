@@ -1,0 +1,11 @@
+// Registra la carpeta de esta extension como ruta de sondeo de assemblies.
+//
+// Sin esto, Visual Studio no encuentra el assembly del <WizardExtension>: los .vstemplate
+// declaran el wizard por nombre simple, y el resolver solo mira la GAC, PrivateAssemblies y
+// las rutas registradas aca. El sintoma es que el template aparece en Add > New Item pero al
+// aceptarlo no pasa absolutamente nada -- VS no puede cargar el IWizard y falla en silencio.
+//
+// $PackageFolder$ es la carpeta donde el VSIX quedo instalado, y la resuelve Visual Studio.
+// El GUID solo tiene que ser unico; no se referencia desde ningun otro lado.
+[$RootKey$\BindingPaths\{74d91b4d-3679-4403-ae61-82fc7176a7fd}]
+"$PackageFolder$"=""

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Table Parameters (DYNAMO)</Name>
+    <Description>Crea una tabla de parametros con el patron completo: campo clave Key con su indice primario y clustered, delete() y validateDelete() bloqueados, y find() que crea el registro unico la primera vez.</Description>
+    <Icon>DynamoTableParameters.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoParameters</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="TableParameters" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <!-- Ver la nota sobre el nombre del assembly en DynamoFormWithMenuItem.vstemplate. -->
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

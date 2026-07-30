@@ -1,0 +1,67 @@
+name: Release
+
+# Compila el VSIX y lo publica como release al hacer push de un tag vN.N.N.
+#
+# REQUIERE UN RUNNER SELF-HOSTED en una VM de desarrollo de D365, etiquetado con "d365".
+# Los runners hospedados por GitHub no sirven: el proyecto referencia assemblies de las
+# herramientas de D365, que son de Microsoft y no se pueden versionar en un repo publico.
+#
+# Para registrar el runner:
+#   Settings > Actions > Runners > New self-hosted runner (Windows),
+#   agregando la etiqueta "d365" ademas de las que trae por defecto.
+#
+# Si no hay runner, este workflow queda en cola y no corre. En ese caso publica desde la VM:
+#   .\tools\New-Release.ps1 -Version 1.0.0
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version a publicar (N.N.N)'
+        required: true
+
+jobs:
+  build:
+    runs-on: [self-hosted, windows, d365]
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolver la version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            '${{ github.event.inputs.version }}'
+          } else {
+            '${{ github.ref_name }}'.TrimStart('v')
+          }
+          "value=$version" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Copiar los assemblies de D365
+        shell: pwsh
+        run: .\tools\Get-D365Assemblies.ps1
+
+      - name: Validar los item templates
+        shell: pwsh
+        run: .\tools\Test-Templates.ps1
+
+      - name: Compilar el VSIX
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          & $msbuild src\Dynamo.D365.ItemTemplates\Dynamo.D365.ItemTemplates.csproj -restore -p:Configuration=Release -v:m -nologo
+          if ($LASTEXITCODE -ne 0) { throw "La compilacion fallo." }
+
+      - name: Publicar el release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          files: src/Dynamo.D365.ItemTemplates/bin/Release/net48/Dynamo.D365.ItemTemplates.vsix
