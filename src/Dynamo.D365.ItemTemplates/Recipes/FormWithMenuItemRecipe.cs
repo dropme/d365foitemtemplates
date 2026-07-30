@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using Dynamo.D365.ItemTemplates.Metadata;
 using Microsoft.Dynamics.AX.Metadata.Core.MetaModel;
 using Microsoft.Dynamics.AX.Metadata.MetaModel;
@@ -31,6 +32,17 @@ namespace Dynamo.D365.ItemTemplates.Recipes
             workspace.Create(menuItem);
         }
 
+        /// <summary>
+        /// Declaracion de clase del form.
+        ///
+        /// A diferencia de una AxClass o una AxTable, que la llevan en SourceCode.Declaration,
+        /// un AxForm la lleva como un metodo llamado "classDeclaration". Sin el, el elemento se
+        /// crea y se ve bien en el AOT, pero al compilar falla con:
+        ///   The 'classDeclaration' is missing from element '&lt;form&gt;'.
+        /// </summary>
+        private const string ClassDeclaration =
+"[Form]\r\npublic class {0} extends FormRun\r\n{{\r\n}}";
+
         internal static AxForm BuildForm(string formName, string baseTable, string pattern, string label)
         {
             var form = new AxForm
@@ -42,6 +54,12 @@ namespace Dynamo.D365.ItemTemplates.Recipes
                     Pattern = pattern
                 }
             };
+
+            form.Methods.Add(new AxMethod
+            {
+                Name = "classDeclaration",
+                Source = string.Format(CultureInfo.InvariantCulture, ClassDeclaration, formName)
+            });
 
             if (!string.IsNullOrWhiteSpace(baseTable))
             {

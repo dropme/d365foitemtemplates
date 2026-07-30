@@ -59,7 +59,8 @@ namespace Dynamo.D365.ItemTemplates.Recipes
             var index = new AxTableIndex
             {
                 Name = KeyIndexName,
-                AllowDuplicates = NoYes.No
+                AllowDuplicates = NoYes.No,
+                AlternateKey = NoYes.Yes
             };
             index.Fields.Add(new AxTableIndexField { DataField = KeyFieldName });
             table.Indexes.Add(index);
