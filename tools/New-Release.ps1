@@ -56,16 +56,27 @@ if (-not (Test-Path (Join-Path $lib 'Microsoft.Dynamics.AX.Metadata.dll'))) {
 
 $manifestXml = Get-Content $manifest -Raw
 
-if ($manifestXml -notmatch 'Version="(\d+\.\d+\.\d+)"') {
-    throw "No se pudo leer la version actual de $manifest"
+# El patron tiene que anclarse al <Identity>: el manifest tiene otros atributos Version, y el
+# primero de todos es el del esquema (<PackageManifest Version="2.0.0">). Tocar ese en vez del
+# de la extension deja el manifest invalido.
+#
+# Se edita el texto y no el XML para no reformatear el resto del archivo.
+$versionPattern = [regex] '(?<=<Identity\b[^>]*?\bVersion=")\d+\.\d+\.\d+(?=")'
+$versionMatch = $versionPattern.Match($manifestXml)
+
+if (-not $versionMatch.Success) {
+    throw "No se pudo leer la version del <Identity> en $manifest"
 }
 
-$current = $Matches[1]
+$current = $versionMatch.Value
 
 if ($current -ne $Version) {
     Write-Host "Actualizando la version del manifest: $current -> $Version"
-    $updated = $manifestXml -replace 'Version="\d+\.\d+\.\d+"', "Version=`"$Version`"", 1
+    $updated = $versionPattern.Replace($manifestXml, $Version, 1)
     [IO.File]::WriteAllText($manifest, $updated, (New-Object Text.UTF8Encoding $false))
+}
+else {
+    Write-Host "El manifest ya esta en $Version"
 }
 
 # --- build ------------------------------------------------------------------------------
@@ -96,6 +107,26 @@ if ($SkipPublish) {
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     throw 'No se encontro gh CLI. Instalalo o publica el release a mano adjuntando el .vsix.'
+}
+
+# gh crea el tag sobre lo que hay en el remoto, no sobre el working copy: si quedan cambios
+# sin pushear, el release apuntaria a un commit que no es el que se acaba de compilar.
+$dirty = & git -C $repoRoot status --porcelain
+
+if ($dirty) {
+    Write-Warning "Hay cambios sin commitear:`n$($dirty -join "`n")"
+}
+
+$unpushed = & git -C $repoRoot log '@{u}..HEAD' --oneline 2>$null
+
+if ($unpushed) {
+    Write-Warning "Hay commits sin pushear:`n$($unpushed -join "`n")"
+}
+
+if ($dirty -or $unpushed) {
+    $answer = Read-Host 'El release puede no reflejar este codigo. Continuar de todas formas? (s/N)'
+
+    if ($answer -ne 's') { throw 'Cancelado.' }
 }
 
 $tag = "v$Version"

@@ -48,6 +48,23 @@ irm https://raw.githubusercontent.com/dropme/d365foitemtemplates/main/install/In
 .\install.ps1 -VsixPath .\mi.vsix # un .vsix propio, para probar
 ```
 
+### "cannot be loaded because running scripts is disabled"
+
+Por defecto Windows no ejecuta archivos `.ps1`. Habilitalo solo para esa ventana:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+O ejecutá el script sin tocar la política:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+El `irm | iex` de arriba **no** se ve afectado: la política aplica a archivos en disco, y ahí
+el script nunca llega a serlo.
+
 El script desinstala la versión anterior antes de instalar, porque `VSIXInstaller` rechaza una
 extensión que ya está presente en vez de reemplazarla.
 
@@ -244,6 +261,7 @@ La consecuencia es que **un runner hospedado por GitHub no puede compilar el VSI
 Desde una VM de desarrollo, con [gh CLI](https://cli.github.com/) autenticado:
 
 ```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # si da "running scripts is disabled"
 .\tools\New-Release.ps1 -Version 1.0.0
 ```
 
