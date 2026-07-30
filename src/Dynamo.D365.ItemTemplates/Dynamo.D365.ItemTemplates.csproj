@@ -44,6 +44,11 @@
       <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.AX.Metadata.Core.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- Catalogo de patrones de form: resuelve la version activa y aplica el patron. -->
+    <Reference Include="Microsoft.Dynamics.AX.Metadata.Patterns">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.AX.Metadata.Patterns.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Microsoft.Dynamics.Framework.Tools.MetaModel.Core.17.0">
       <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.MetaModel.Core.17.0.dll</HintPath>
       <Private>false</Private>

@@ -7,6 +7,12 @@ elementos del AOT ya conectados entre sí.
 | --- | --- | --- |
 | Form + Display Menu Item | User Interface | `AxForm` (con data source opcional) + `AxMenuItemDisplay` apuntando al form |
 | Form + Display Menu Item + Privilegios | User Interface | Lo anterior + un `AxSecurityPrivilege` por nivel de acceso. Para un form sobre tablas que ya existen |
+| Form Simple List | User Interface | `AxForm` con el patrón Simple List completo sobre una tabla existente |
+| Form Simple List + Menu Item | User Interface | Lo anterior + `AxMenuItemDisplay` |
+| Form Simple List + Menu Item + Privilegios | User Interface | Lo anterior + un `AxSecurityPrivilege` por nivel |
+| Table + Form Simple List | Data Model | `AxTable` (campo clave, índice, grupo `Overview`) + el form Simple List sobre ella |
+| Table + Form Simple List + Menu Item | Data Model | Lo anterior + `AxMenuItemDisplay` |
+| Table + Form Simple List + Menu Item + Privilegios | Data Model | Lo anterior + un `AxSecurityPrivilege` por nivel |
 | Table + Form + Menu Item + Privilegios | Data Model | `AxTable` + `AxForm` con la tabla como data source + `AxMenuItemDisplay` + un `AxSecurityPrivilege` por nivel de acceso |
 | Table Parameters | Data Model | Tabla de parámetros con el patrón completo: campo clave `Key`, índice primario y clustered, `delete()`/`validateDelete()` bloqueados y `find()` que crea el registro único |
 | SysOperation: Controller + Service | Code | `<Nombre>Controller` + `<Nombre>Service`, enlazadas por `classStr`/`methodStr`. `process()` sin parámetros |
@@ -67,6 +73,58 @@ el script nunca llega a serlo.
 
 El script desinstala la versión anterior antes de instalar, porque `VSIXInstaller` rechaza una
 extensión que ya está presente en vez de reemplazarla.
+
+### El patrón Simple List
+
+La estructura sale de `TrudAX/TRUDUtilsD365` (`FormBuilder/FormBuilderParms.cs`, en
+`DoFormCreate`, caso `FormTemplateType.SimpleList`):
+
+```
+Design
+  MainActionPane   AxFormActionPaneControl
+  FilterGroup      patrón CustomAndQuickFilters 1.1
+    QuickFilter    extensión QuickFilterControl → targetControlName = MainGrid
+  MainGrid         AxFormGridControl sobre el data source
+    Overview       grupo con DataGroup = Overview
+```
+
+Hay dos acoplamientos por nombre fáciles de romper: el quick filter apunta al grid por su
+nombre (`MainGrid`), y el grupo del grid usa el field group `Overview` **de la tabla**. Si la
+tabla no tiene ese field group, el form compila igual pero el grid sale vacío — por eso los
+templates que crean la tabla se la agregan.
+
+En los tres templates que **no** crean la tabla, el wizard pregunta sobre cuál va el grid con
+un cuadro de diálogo propio ([InputDialog](src/Dynamo.D365.ItemTemplates/Ui/InputDialog.cs)),
+porque el diálogo de *Add > New Item* solo pide un nombre.
+
+**La tabla es opcional**: dejar el campo en blanco crea el form con la estructura del Simple
+List pero sin data source, para completarlo en el diseñador. Solo cancelar aborta la receta.
+Si se completa `$DynamoBaseTable$` en el `.vstemplate`, no pregunta nada.
+
+### Aplicar el patrón
+
+Escribir `Design.Pattern = "SimpleList"` a mano no alcanza, y además obliga a hardcodear una
+`PatternVersion` que cambia entre PUs. El catálogo sabe cuál es la versión activa en cada
+instalación:
+
+```csharp
+Pattern pattern = new PatternFactory(true)
+    .GetPatternsByName("SimpleList", throwOnError: false)
+    .FirstOrDefault(p => p.Active);
+
+element.ApplyPattern(pattern);   // extension de Microsoft.Dynamics.AX.Metadata.Patterns
+```
+
+Eso es [PatternApplier](src/Dynamo.D365.ItemTemplates/Recipes/PatternApplier.cs), copiado de
+`AxHelper.cs` de TRUDUtilsD365. Dos ventajas sobre el hardcode: la versión sale del catálogo,
+y **`ApplyPattern` valida que la estructura de controles cumpla el patrón** — si no cumple
+devuelve `false` y la receta falla con un mensaje claro, en vez de dejar un form con un patrón
+mal declarado.
+
+Requiere referenciar `Microsoft.Dynamics.AX.Metadata.Patterns`. El catálogo trae las 162
+definiciones estándar en el propio assembly, sin leer nada de disco.
+
+Los patrones se aplican **al final**, con la estructura ya armada.
 
 ### Clases X++
 

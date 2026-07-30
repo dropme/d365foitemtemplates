@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Table + Form Simple List + Menu Item + Privilegios (DYNAMO)</Name>
+    <Description>Crea una tabla, un Form con el patron Simple List usandola como data source, un Display Menu Item y los privilegios de seguridad.</Description>
+    <Icon>DynamoTableFormSimpleListWithSecurity.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoTable</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <!-- Todas las variantes de Simple List comparten receta; cambian solo los flags. -->
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="SimpleList" />
+      <CustomParameter Name="$DynamoCreateTable$" Value="true" />
+      <CustomParameter Name="$DynamoIncludeMenuItem$" Value="true" />
+      <CustomParameter Name="$DynamoIncludePrivileges$" Value="true" />
+      <!-- Campo clave de la tabla que se crea; tambien nombra su indice. -->
+      <CustomParameter Name="$DynamoKeyField$" Value="Code" />
+      <CustomParameter Name="$DynamoPrivilegeLevels$" Value="View,Maintain" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

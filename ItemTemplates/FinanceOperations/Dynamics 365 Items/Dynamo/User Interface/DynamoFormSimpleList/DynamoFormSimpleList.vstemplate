@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Form Simple List (DYNAMO)</Name>
+    <Description>Crea un Form con el patron Simple List (action pane, quick filter y grid) sobre una tabla existente.</Description>
+    <Icon>DynamoFormSimpleList.ico</Icon>
+    <ProjectType>FinanceOperations</ProjectType>
+    <DefaultName>DynamoListPage</DefaultName>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+
+  <!-- Todas las variantes de Simple List comparten receta; cambian solo los flags. -->
+  <TemplateContent>
+    <CustomParameters>
+      <CustomParameter Name="$DynamoRecipe$" Value="SimpleList" />
+      <CustomParameter Name="$DynamoCreateTable$" Value="false" />
+      <CustomParameter Name="$DynamoIncludeMenuItem$" Value="false" />
+      <CustomParameter Name="$DynamoIncludePrivileges$" Value="false" />
+      <!--
+        Tabla existente sobre la que va el grid. Si se deja vacio, el wizard la pide en un
+        dialogo; si se completa aca, no pregunta nada.
+      -->
+      <CustomParameter Name="$DynamoBaseTable$" Value="" />
+    </CustomParameters>
+  </TemplateContent>
+
+  <WizardExtension>
+    <Assembly>Dynamo.D365.ItemTemplates</Assembly>
+    <FullClassName>Dynamo.D365.ItemTemplates.DynamoItemCreationWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

@@ -36,6 +36,7 @@ namespace Dynamo.D365.ItemTemplates
         {
             new FormWithMenuItemRecipe(),
             new FormWithPrivilegesRecipe(),
+            new SimpleListRecipe(),
             new TableSuiteRecipe(),
             new TableParametersRecipe(),
             new SysOperationRecipe()
@@ -82,6 +83,11 @@ namespace Dynamo.D365.ItemTemplates
             {
                 // El usuario cancelo: propagar sin ruido, VS no muestra error.
                 throw;
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancelo alguno de los dialogos de parametros de la receta.
+                throw new WizardBackoutException();
             }
             catch (Exception ex)
             {
