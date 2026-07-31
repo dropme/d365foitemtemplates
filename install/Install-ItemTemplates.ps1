@@ -50,6 +50,17 @@ $Repo = 'dropme/d365foitemtemplates'
 # si cambia alla, hay que cambiarlo aca.
 $ExtensionId = 'Dynamo.D365.ItemTemplates.9f3c1a4e-8b21-4d7a-9c55-2f0e6d1b7a83'
 
+# El mismo assembly provee los item templates (via VSIX) y el add-in Fill Pattern (via MEF).
+$AddinAssemblyName = 'Dynamo.D365.ItemTemplates.dll'
+
+# Dependencias que no vienen con las herramientas de D365 y que MEF necesita poder resolver
+# para inspeccionar el assembly.
+$AddinDependencies = @(
+    'envdte.dll'
+    'Microsoft.VisualStudio.Interop.dll'
+    'Microsoft.VisualStudio.TemplateWizardInterface.dll'
+)
+
 # Windows PowerShell 5.1 negocia TLS 1.0 por defecto; GitHub solo acepta 1.2+.
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -137,6 +148,112 @@ function Invoke-VsixInstaller {
     }
 }
 
+function Get-AddinDirectories {
+    <#
+        Los add-ins no se cargan desde la carpeta del VSIX: AddinFactory arma su catalogo MEF
+        sobre AddinsEnvironmentHelper.AddinDirectories(), y la primera de esas rutas es
+        <carpeta de las herramientas de D365>\AddinExtensions. Ahi va el assembly.
+
+        El nombre de la carpeta de la extension es aleatorio por maquina, por eso se busca.
+    #>
+    param([Parameter(Mandatory)] $Instances)
+
+    $directories = @()
+
+    foreach ($instance in $Instances) {
+        $extensions = Join-Path $instance.installationPath 'Common7\IDE\Extensions'
+
+        if (-not (Test-Path $extensions)) { continue }
+
+        $marker = Get-ChildItem $extensions -Recurse -Filter 'Microsoft.Dynamics.Framework.Tools.Extensibility.17.0.dll' -ErrorAction SilentlyContinue |
+                  Select-Object -First 1
+
+        if (-not $marker) { continue }
+
+        $directories += Join-Path $marker.Directory.FullName 'AddinExtensions'
+    }
+
+    return $directories
+}
+
+function Install-Addin {
+    param(
+        # Sin Mandatory: al desinstalar no hay .vsix del que extraer nada, y un string vacio en
+        # un parametro obligatorio hace que PowerShell lo pida por consola y cuelgue el script.
+        [string] $VsixPath,
+        [Parameter(Mandatory)] $Instances,
+        [switch] $Remove
+    )
+
+    $directories = Get-AddinDirectories -Instances $Instances
+
+    if ($directories.Count -eq 0) {
+        Write-Warning 'No se encontraron las herramientas de D365; se omite el add-in (los item templates si quedan instalados).'
+        return
+    }
+
+    foreach ($directory in $directories) {
+        $target = Join-Path $directory $AddinAssemblyName
+
+        if ($Remove) {
+            if (Test-Path $target) {
+                Remove-Item $target -Force
+                Write-Host "  quitado  $target" -ForegroundColor Green
+            }
+
+            foreach ($name in $AddinDependencies) {
+                $dep = Join-Path (Join-Path $directory 'Dependencies') $name
+                if (Test-Path $dep) { Remove-Item $dep -Force }
+            }
+
+            continue
+        }
+
+        if (-not (Test-Path $directory)) {
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+        }
+
+        # El assembly ya viene dentro del .vsix, que es un zip.
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($VsixPath)
+
+        try {
+            $entry = $zip.Entries | Where-Object { $_.Name -eq $AddinAssemblyName } | Select-Object -First 1
+
+            if (-not $entry) {
+                Write-Warning "  el .vsix no contiene $AddinAssemblyName"
+                return
+            }
+
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
+            Write-Host "  OK       $target" -ForegroundColor Green
+
+            # Si MEF no puede resolver una dependencia al inspeccionar el assembly, descarta
+            # el add-in entero sin decir nada. AddinFactory mira una subcarpeta Dependencies y
+            # resuelve desde ahi, asi que se dejan las que no son parte de las herramientas.
+            $dependencies = Join-Path $directory 'Dependencies'
+
+            foreach ($name in $AddinDependencies) {
+                $dep = $zip.Entries | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+
+                if (-not $dep) { continue }
+
+                if (-not (Test-Path $dependencies)) {
+                    New-Item -ItemType Directory -Path $dependencies -Force | Out-Null
+                }
+
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile(
+                    $dep, (Join-Path $dependencies $name), $true)
+
+                Write-Host "  OK       Dependencies\$name" -ForegroundColor DarkGray
+            }
+        }
+        finally {
+            $zip.Dispose()
+        }
+    }
+}
+
 # ---------------------------------------------------------------------------------------
 
 Assert-VisualStudioClosed
@@ -150,6 +267,9 @@ if ($Uninstall) {
     foreach ($instance in $instances) {
         Invoke-VsixInstaller -Instance $instance -Arguments @("/uninstall:$ExtensionId")
     }
+
+    Write-Host "Quitando el add-in..."
+    Install-Addin -Instances $instances -Remove
 
     Write-Host "`nListo." -ForegroundColor Green
     return
@@ -181,6 +301,11 @@ try {
     foreach ($instance in $instances) {
         Invoke-VsixInstaller -Instance $instance -Arguments @("`"$VsixPath`"")
     }
+
+    # El add-in va aparte: los item templates los resuelve el VSIX, pero el menu Addins se
+    # carga por MEF desde la carpeta de las herramientas de D365.
+    Write-Host "Instalando el add-in Fill Pattern..."
+    Install-Addin -VsixPath $VsixPath -Instances $instances
 }
 finally {
     if ($downloaded -and (Test-Path $VsixPath)) {
@@ -189,5 +314,6 @@ finally {
 }
 
 Write-Host ""
-Write-Host "Listo. Abri Visual Studio y busca los templates en:" -ForegroundColor Green
-Write-Host "  click derecho en el proyecto > Add > New Item > Dynamics 365 Items"
+Write-Host "Listo." -ForegroundColor Green
+Write-Host "  Templates:  click derecho en el proyecto > Add > New Item > Dynamics 365 Items > Dynamo"
+Write-Host "  Add-in:     click derecho sobre un formulario > Addins > Fill Pattern"

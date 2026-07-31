@@ -73,6 +73,14 @@
       <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.ProjectSupport.17.0.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- IForm y demas automation objects, el modelo con el que hablan los add-ins. -->
+    <Reference Include="Microsoft.Dynamics.Framework.Tools.AutomationObjects.17.0">
+      <HintPath>$(D365ToolsPath)\Microsoft.Dynamics.Framework.Tools.AutomationObjects.17.0.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- MEF: es asi como AddinFactory descubre los add-ins. -->
+    <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
 
   <ItemGroup>

@@ -46,21 +46,18 @@ namespace Dynamo.D365.ItemTemplates.Recipes
         }
 
         /// <summary>
-        /// AccessGrant no es un nivel unico sino un permiso por operacion.
-        /// "View" da solo lectura; cualquier otro nivel (Maintain) da acceso completo.
+        /// AccessGrant no es un nivel unico sino un permiso por operacion, y los niveles son
+        /// acumulativos: Read &lt; Update &lt; Create &lt; Correct &lt; Delete.
+        ///
+        /// Que incluye cada uno lo define el metamodelo con ConstructGrant*, no nosotros:
+        /// armarlo a mano es como se cuelan diferencias (Correct, por ejemplo) entre esto y el
+        /// add-in "Set as delete", que deberia dar exactamente el mismo resultado.
         /// </summary>
         private static AccessGrant GrantFor(string level)
         {
-            if (string.Equals(level, "View", StringComparison.OrdinalIgnoreCase))
-                return new AccessGrant { Read = AccessGrantPermission.Allow };
-
-            return new AccessGrant
-            {
-                Read = AccessGrantPermission.Allow,
-                Create = AccessGrantPermission.Allow,
-                Update = AccessGrantPermission.Allow,
-                Delete = AccessGrantPermission.Allow
-            };
+            return string.Equals(level, "View", StringComparison.OrdinalIgnoreCase)
+                ? AccessGrant.ConstructGrantRead()
+                : AccessGrant.ConstructGrantDelete();
         }
 
         private static IEnumerable<string> ParseLevels(string raw)

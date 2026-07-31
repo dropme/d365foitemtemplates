@@ -9,7 +9,10 @@ obj/
 #
 # NO se versionan: son binarios propietarios de Microsoft y este repo es publico.
 # Se obtienen de la instalacion local con tools\Get-D365Assemblies.ps1.
-lib/*.dll
+#
+# Se ignora la carpeta entera y no solo *.dll: ahi tambien terminan instaladores y otros
+# archivos sueltos de las herramientas, y alguno supera el limite de 100 MB de GitHub.
+lib/
 
 # Codigo decompilado de las herramientas de Microsoft.
 #

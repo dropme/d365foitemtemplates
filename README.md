@@ -32,6 +32,51 @@ En los templates de SysOperation el usuario escribe el **nombre base**; los sufi
 la receta. Si escribe el nombre ya con sufijo (`MiProcesoController`), se lo quita para que las
 tres clases queden parejas.
 
+## Add-ins
+
+Además de los templates, la extensión agrega entradas al menú **Addins** del diseñador.
+
+| Add-in | Sobre qué | Qué hace |
+| --- | --- | --- |
+| Fill Pattern | un formulario | Crea los controles obligatorios del patrón que tenga puesto |
+| Set as read | un privilegio | Deja todos sus entry points en solo lectura |
+| Set as delete | un privilegio | Deja todos sus entry points con acceso completo |
+
+Los tres trabajan sobre el metamodelo, no sobre el diseñador abierto. Eso tiene dos
+consecuencias:
+
+- hay que **recargar el elemento** para ver los cambios;
+- si hay cambios **sin guardar**, el add-in leería la versión vieja del disco y al guardar
+  pisaría lo que está en el diseñador. Por eso avisa y ofrece guardar antes de seguir.
+
+### Set as read / Set as delete
+
+Recorren todos los entry points del privilegio y les ponen el mismo access level. A mano es
+tedioso y fácil de dejar a medias, porque cada entry point tiene su propia propiedad.
+
+Los niveles son acumulativos —`Read < Update < Create < Correct < Delete`— y qué incluye cada
+uno lo decide el metamodelo con `AccessGrant.ConstructGrantRead()` / `ConstructGrantDelete()`,
+no nosotros. Los templates que generan privilegios usan las mismas funciones, así que
+`Maintain` produce exactamente lo mismo que *Set as delete*.
+
+### Fill Pattern
+
+Aparece en **click derecho sobre un formulario > Addins > Fill Pattern**.
+
+Completa los controles que el patrón del form declara obligatorios: lee cuál tiene puesto el
+Design, crea los que faltan, aplica el patrón y guarda. Hay que **recargar el formulario** para
+ver los cambios, porque trabaja sobre el metamodelo y no sobre el diseñador abierto.
+
+Es idempotente: volver a ejecutarlo no duplica nada.
+
+Medido contra los 34 patrones de form activos, **25 completan y validan**: `SimpleList`,
+`SimpleListDetails`, `DetailsMaster`, `DetailsTransaction`, `ListPage`, `Wizard`, y las
+variantes de `SimpleDetails` y `Workspace`, entre otros.
+
+Los 9 restantes —`Dialog` y sus variantes, los `Lookup`, `AdvancedSelection`— fallan todos por
+lo mismo: el patrón exige placeholders (`$Field`, `$Container`) que dependen de qué campo
+quiera mostrar el usuario, así que no se pueden crear sin preguntar.
+
 ## Instalación
 
 Con Visual Studio **cerrado**, en PowerShell:
